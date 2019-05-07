@@ -379,6 +379,7 @@ function bbbScript() { // Wrapper for injecting the script into the document.
 			clean_links: newOption("checkbox", false, "Clean Links", "Remove the extra information after the post ID in thumbnail listing post links.<tiphead>Note</tiphead>Enabling this option will disable Danbooru's search navigation and active pool/favorite group detection for posts."),
 			collapse_sidebar: newOption("checkbox", false, "Collapsible Sidebar", "Allow sections in the sidebar to be expanded and collapsed via clicking their header titles.<tiphead>Note</tiphead>Sections can be set to default to expanded or collapsed by right clicking their titles."),
 			comment_score: newOption("checkbox", false, "Comment Scores", "Make comment scores visible by adding them as direct links to their respective comments."),
+			bigger_thumbnails: newOption("checkbox", false, "Bigger Thumbnails", "Makes thumbnails bigger."),
 			custom_status_borders: newOption("checkbox", false, "Custom Status Borders", "Override Danbooru's thumbnail borders for deleted, flagged, pending, parent, and child images."),
 			custom_tag_borders: newOption("checkbox", true, "Custom Tag Borders", "Add thumbnail borders to posts with specific tags."),
 			direct_downloads: newOption("checkbox", false, "Direct Downloads", "Allow download managers to download the posts displayed in the favorites, search, pool, popular, and favorite group listings. <tiphead>Note</tiphead>Posts filtered out by the blacklist or quick search will not provide direct downloads until the blacklist entry or quick search affecting them is disabled."),
@@ -461,7 +462,7 @@ function bbbScript() { // Wrapper for injecting the script into the document.
 			blacklist_options: newSection("general", ["blacklist_session_toggle", "blacklist_post_display", "blacklist_thumb_mark", "blacklist_highlight_color", "blacklist_thumb_controls", "blacklist_smart_view", "blacklist_add_bars", "blacklist_video_playback", "blacklist_ignore_fav"], "Options"),
 			border_options: newSection("general", ["custom_tag_borders", "custom_status_borders", "single_color_borders", "border_width", "border_spacing"], "Options"),
 			browse: newSection("general", ["show_loli", "show_shota", "show_toddlercon", "show_banned", "show_deleted", "thumbnail_count", "thumb_info", "post_link_new_window"], "Post Browsing"),
-			control: newSection("general", ["load_sample_first", "alternate_image_swap", "image_swap_mode", "post_resize", "post_resize_mode", "post_drag_scroll", "autoscroll_post", "disable_embedded_notes", "video_volume", "video_autoplay", "video_loop", "video_controls"], "Post Control"),
+			control: newSection("general", ["bigger_thumbnails", "load_sample_first", "alternate_image_swap", "image_swap_mode", "post_resize", "post_resize_mode", "post_drag_scroll", "autoscroll_post", "disable_embedded_notes", "video_volume", "video_autoplay", "video_loop", "video_controls"], "Post Control"),
 			endless: newSection("general", ["endless_default", "endless_session_toggle", "endless_separator", "endless_scroll_limit", "endless_remove_dup", "endless_pause_interval", "endless_fill", "endless_preload"], "Endless Pages"),
 			groups: newSection("group", "tag_groups", "Groups", "Tags that are frequently used together or that need to be coordinated between multiple places may be grouped together and saved here for use with the \"group\" metatag."),
 			notices: newSection("general", ["show_resized_notice", "minimize_status_notices", "hide_sign_up_notice", "hide_upgrade_notice", "hide_hidden_notice", "hide_tos_notice", "hide_comment_notice", "hide_tag_notice", "hide_upload_notice", "hide_pool_notice", "hide_ban_notice"], "Notices"),
@@ -509,6 +510,7 @@ function bbbScript() { // Wrapper for injecting the script into the document.
 	var blacklist_smart_view = bbb.user.blacklist_smart_view;
 	var blacklist_video_playback = bbb.user.blacklist_video_playback;
 
+	var bigger_thumbnails = bbb.user.bigger_thumbnails;
 	var custom_tag_borders = bbb.user.custom_tag_borders;
 	var custom_status_borders = bbb.user.custom_status_borders;
 	var single_color_borders = bbb.user.single_color_borders;
@@ -4746,6 +4748,24 @@ function bbbScript() { // Wrapper for injecting the script into the document.
 					link.setAttribute("style", styleList[postInfo.id]);
 				}
 			}
+
+			if (bigger_thumbnails) {
+                var source_max = post.getElementsByTagName("source")[0];
+                var source_min = post.getElementsByTagName("source")[1];
+                source_max.srcset = postInfo.large_file_url;
+                source_min.srcset = postInfo.large_file_url;
+                const { large_height, large_width } = postInfo;
+                img.src = postInfo.large_file_url;
+                link.style.height = '100%';
+                link.style.height = '100%';
+                if (large_height >= large_width) {
+                    img.style.height = '97%';
+                    img.style.width = 'auto'
+                } else {
+                    img.style.height = 'auto';
+                    img.style.width = '97%'
+                }
+            }
 		}
 	}
 
@@ -7691,6 +7711,14 @@ function bbbScript() { // Wrapper for injecting the script into the document.
 		'.post-preview div.preview a.bbb-thumb-link {line-height: 0px !important;}' +
 		'.post-preview a.bbb-thumb-link img {border-width: ' + border_width + 'px !important; padding: ' + border_spacing + 'px !important;}' +
 		'a.bbb-thumb-link.bbb-custom-tag {border-width: ' + border_width + 'px !important;}';
+
+		if (bigger_thumbnails) {
+            const posts_container = document.getElementById("posts-container");
+            const { offsetWidth } = posts_container;
+            const thumbWidth = ((offsetWidth - 20) / 4);
+            const thumbHeight = thumbWidth;
+            styles += `article.post-preview {height: ${thumbWidth}px !important; width: ${thumbHeight}px !important;}`;
+        }
 
 		if (custom_status_borders) {
 			var activeStatusStyles = "";
